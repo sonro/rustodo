@@ -3,50 +3,50 @@ use super::model::TaskModel;
 use super::schema::tasks;
 use super::updator::DbTaskUpdator;
 use diesel::prelude::*;
-
-pub trait DbRepository {
-    type Item;
-    type Updator;
-
-    fn find_all() -> Vec<Self::Item>;
-    fn find_one(id: i32) -> Self::Item;
-    fn add(updator: Self::Updator) -> Self::Item;
-    fn remove(id: i32) -> usize;
-    fn update(id: i32, updator: Self::Updator) -> Self::Item;
-}
+use todo::*;
 
 pub struct DbTaskRepository;
 
-impl DbRepository for DbTaskRepository {
-    type Item = TaskModel;
-    type Updator = DbTaskUpdator;
+fn models_into_tasks(models: Vec<TaskModel>) -> Vec<Task> {
+    models.into_iter().map(|t| t.into()).collect()
+}
 
-    fn find_all() -> Vec<Self::Item> {
-        tasks::table.load(&get_conn()).expect("find all tasks")
+impl Repository for DbTaskRepository {
+    type Item = Task;
+    type Updator = TaskForm;
+
+    fn find_all(&self) -> Vec<Self::Item> {
+        let models = tasks::table.load(&get_conn()).expect("find all tasks");
+        models_into_tasks(models)
     }
 
-    fn find_one(id: i32) -> Self::Item {
-        tasks::table.find(id).first(&get_conn()).expect("find task")
+    fn find_one(&self, id: i32) -> Self::Item {
+        let model: TaskModel = tasks::table.find(id).first(&get_conn()).expect("find task");
+        model.into()
     }
 
-    fn add(updator: Self::Updator) -> Self::Item {
-        diesel::insert_into(tasks::table)
+    fn add(&self, updator: Self::Updator) -> Self::Item {
+        let updator: DbTaskUpdator = updator.into();
+        let model: TaskModel = diesel::insert_into(tasks::table)
             .values(updator)
             .get_result(&get_conn())
-            .expect("save new task")
+            .expect("save new task");
+        model.into()
     }
 
-    fn remove(id: i32) -> usize {
+    fn remove(&self, id: i32) -> usize {
         diesel::delete(tasks::table.filter(tasks::id.eq(id)))
             .execute(&get_conn())
             .expect("delete task")
     }
 
-    fn update(id: i32, updator: Self::Updator) -> Self::Item {
-        diesel::update(tasks::table)
+    fn update(&self, id: i32, updator: Self::Updator) -> Self::Item {
+        let updator: DbTaskUpdator = updator.into();
+        let model: TaskModel = diesel::update(tasks::table)
             .filter(tasks::id.eq(id))
             .set(updator)
             .get_result(&get_conn())
-            .expect("update task")
+            .expect("update task");
+        model.into()
     }
 }

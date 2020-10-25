@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::prelude::*;
 
 #[derive(Queryable)]
 pub struct TaskModel {
@@ -10,28 +10,15 @@ pub struct TaskModel {
     description: Option<String>,
 }
 
-impl From<todo::Task> for TaskModel {
-    fn from(task: todo::Task) -> Self {
+impl From<TaskModel> for todo::Task {
+    fn from(model: TaskModel) -> Self {
         Self {
-            id: task.id,
-            title: task.title,
-            done: task.done,
-            updated_at: task.updated_at.naive_utc(),
-            due: task.due.map(|d| d.naive_utc()),
-            description: task.description,
-        }
-    }
-}
-
-impl From<&todo::Task> for TaskModel {
-    fn from(task: &todo::Task) -> Self {
-        Self {
-            id: task.id,
-            title: task.title.clone(),
-            done: task.done,
-            updated_at: task.updated_at.naive_utc(),
-            due: task.due.map(|d| d.naive_utc()),
-            description: task.description.clone(),
+            id: model.id,
+            title: model.title,
+            done: model.done,
+            updated_at: DateTime::from_utc(model.updated_at, Utc),
+            due: model.due.map(|d| DateTime::from_utc(d, Utc)),
+            description: model.description,
         }
     }
 }

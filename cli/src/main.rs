@@ -1,10 +1,13 @@
+use chrono::{Duration, Utc};
 use clap::Clap;
 use opts::Opts;
+use todo::*;
 
 mod opts;
 mod view;
 
 fn main() {
+    app::setup();
     let opts = Opts::parse();
 
     match opts {
@@ -13,26 +16,27 @@ fn main() {
     }
 }
 
-pub fn list_tasks() {
-    // let tasks = Task::find_all();
-    // for task in tasks {
-    //     dbg!(task);
-    // }
+fn list_tasks() {
+    let repo = app::task::get_repo();
+    let tasks = repo.find_all();
+    for task in tasks {
+        dbg!(task);
+    }
 }
 
-pub fn new_task() {
-    // let title = get_cli_input("Title: ");
-    // let description = get_cli_input("Description: ");
+fn new_task() {
+    use view::get_cli_input;
 
-    // let due = get_cli_input("Hours until due: ");
-    // let due: i64 = due.parse().expect("parse due as integer");
-    // let due = Utc::now() + Duration::hours(due);
+    let mut new_task = TaskForm::new();
+    new_task.title(get_cli_input("Title: "));
+    new_task.description(get_cli_input("Description:"));
 
-    // let mut new_task = TaskDto::new(title);
-    // new_task.description(description);
-    // new_task.due(due.naive_utc());
+    let due = get_cli_input("Hours until due: ");
+    let due: i64 = due.parse().expect("parse due as integer");
+    new_task.due(Utc::now() + Duration::hours(due));
 
-    // let task = Task::add(&new_task);
+    let repo = app::task::get_repo();
+    let task = repo.add(new_task);
 
-    // dbg!(&task);
+    dbg!(&task);
 }

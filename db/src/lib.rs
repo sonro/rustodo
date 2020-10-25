@@ -8,3 +8,7 @@ mod schema;
 mod updator;
 
 pub use repository::*;
+
+pub fn setup() {
+    dotenv::dotenv().ok();
+}
