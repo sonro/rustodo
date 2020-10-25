@@ -10,8 +10,8 @@ pub struct DbTaskUpdator {
     pub description: Option<Option<String>>,
 }
 
-impl From<todo::TaskForm> for DbTaskUpdator {
-    fn from(task: todo::TaskForm) -> Self {
+impl From<domain::TaskForm> for DbTaskUpdator {
+    fn from(task: domain::TaskForm) -> Self {
         Self {
             title: task.title,
             done: task.done,

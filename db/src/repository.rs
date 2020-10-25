@@ -3,7 +3,7 @@ use super::model::TaskModel;
 use super::schema::tasks;
 use super::updator::DbTaskUpdator;
 use diesel::prelude::*;
-use todo::*;
+use domain::*;
 
 pub struct DbTaskRepository;
 

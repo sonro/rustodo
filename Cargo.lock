@@ -5,7 +5,7 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "db",
- "todo",
+ "domain",
 ]
 
 [[package]]
@@ -89,7 +89,7 @@ dependencies = [
  "app",
  "chrono",
  "clap",
- "todo",
+ "domain",
 ]
 
 [[package]]
@@ -98,8 +98,8 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "diesel",
+ "domain",
  "dotenv",
- "todo",
 ]
 
 [[package]]
@@ -124,6 +124,13 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "domain"
+version = "0.1.0"
+dependencies = [
+ "chrono",
 ]
 
 [[package]]
@@ -298,13 +305,6 @@ dependencies = [
  "libc",
  "wasi",
  "winapi",
-]
-
-[[package]]
-name = "todo"
-version = "0.1.0"
-dependencies = [
- "chrono",
 ]
 
 [[package]]

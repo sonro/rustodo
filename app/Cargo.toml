@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 db = { path = "../db" }
-todo = { path = "../todo" }
+domain = { path = "../domain" }

@@ -1,7 +1,7 @@
 use chrono::{Duration, Utc};
 use clap::Clap;
+use domain::*;
 use opts::Opts;
-use todo::*;
 
 mod opts;
 mod view;
