@@ -2,6 +2,7 @@
 
 members = [
 	"cli",
-	"core",
+	"app",
 	"db",
+	"todo",
 ]
