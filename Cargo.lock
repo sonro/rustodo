@@ -89,7 +89,6 @@ dependencies = [
  "app",
  "chrono",
  "clap",
- "domain",
 ]
 
 [[package]]

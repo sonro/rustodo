@@ -1,13 +1,13 @@
+use app::*;
 use chrono::{Duration, Utc};
 use clap::Clap;
-use domain::*;
 use opts::Opts;
 
 mod opts;
 mod view;
 
 fn main() {
-    app::setup();
+    setup();
     let opts = Opts::parse();
 
     match opts {

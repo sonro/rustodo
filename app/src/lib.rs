@@ -1,3 +1,5 @@
+pub use domain::*;
+
 type TaskRepository = db::DbTaskRepository;
 
 pub fn setup() {
