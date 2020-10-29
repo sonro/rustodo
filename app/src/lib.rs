@@ -1,27 +1,16 @@
-pub use domain::*;
-
-type TaskRepository = db::DbTaskRepository;
-
 pub fn setup() {
     db::setup();
 }
 
-struct Repositories {
-    task: TaskRepository,
-}
-
-impl Repositories {
-    fn init() -> Self {
-        Self {
-            task: db::DbTaskRepository,
+macro_rules! repo {
+    ($mod_name:ident, $type:ty, $return:expr) => {
+        pub mod $mod_name {
+            pub use domain::$mod_name::*;
+            pub fn get_repo() -> $type {
+                $return
+            }
         }
-    }
+    };
 }
 
-pub mod task {
-    use super::*;
-
-    pub fn get_repo() -> TaskRepository {
-        Repositories::init().task
-    }
-}
+repo!(task, db::DbTaskRepository, db::DbTaskRepository);

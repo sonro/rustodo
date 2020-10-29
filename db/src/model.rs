@@ -10,7 +10,7 @@ pub struct TaskModel {
     description: Option<String>,
 }
 
-impl From<TaskModel> for domain::Task {
+impl From<TaskModel> for domain::task::Task {
     fn from(model: TaskModel) -> Self {
         Self {
             id: model.id,

@@ -1,5 +1,6 @@
 use super::schema::tasks;
 use chrono::NaiveDateTime;
+use domain::task::TaskForm;
 
 #[derive(Insertable, AsChangeset)]
 #[table_name = "tasks"]
@@ -10,8 +11,8 @@ pub struct DbTaskUpdator {
     pub description: Option<Option<String>>,
 }
 
-impl From<domain::TaskForm> for DbTaskUpdator {
-    fn from(task: domain::TaskForm) -> Self {
+impl From<TaskForm> for DbTaskUpdator {
+    fn from(task: TaskForm) -> Self {
         Self {
             title: task.title,
             done: task.done,
