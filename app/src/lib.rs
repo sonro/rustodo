@@ -1,3 +1,5 @@
+mod inmem;
+
 pub fn setup() {
     db::setup();
 }

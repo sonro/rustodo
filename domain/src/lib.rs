@@ -9,7 +9,7 @@ pub mod task {
         fn update(&self, id: i32, updator: TaskForm) -> Task;
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub struct Task {
         pub id: i32,
         pub title: String,
