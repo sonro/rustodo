@@ -35,6 +35,10 @@ where
         self.storage.insert(self.serial, item);
         self.fetch_one(self.serial).expect("just inserted item")
     }
+
+    fn next_id(&self) -> i32 {
+        self.serial + 1
+    }
 }
 
 #[cfg(test)]
@@ -54,7 +58,6 @@ mod tests {
         let test_records = get_test_records();
         let list = store.fetch_all();
         assert_eq!(test_records.len(), list.len());
-        assert_eq!(store.serial, list.len() as i32);
         for (record, list) in test_records.iter().zip(list) {
             assert_eq!(record, list);
         }
@@ -63,34 +66,26 @@ mod tests {
     #[test]
     fn mem_store_insert_to_empty_list() {
         let mut store = get_empty_mem_store();
-        insert_filled_form_to_store(&mut store);
+        let record = insert_filled_form_to_store(&mut store);
         assert_eq!(1, get_list_len(&store));
-    }
-
-    #[test]
-    fn mem_store_serial_increases_on_insert() {
-        let mut store = get_empty_mem_store();
-        let mut expected_serial = 0;
-        assert_eq!(expected_serial, store.serial);
-        insert_filled_form_to_store(&mut store);
-        expected_serial += 1;
-        assert_eq!(expected_serial, store.serial);
+        assert_eq!(1, record.id);
     }
 
     #[test]
     fn mem_store_insert_to_populated_list() {
         let mut store = get_populated_mem_store();
         let existing_list_len = get_list_len(&store);
-        insert_filled_form_to_store(&mut store);
+        let record = insert_filled_form_to_store(&mut store);
         let expected_list_len = existing_list_len + 1;
         assert_eq!(expected_list_len, get_list_len(&store));
+        assert_eq!(expected_list_len, record.id as usize);
     }
 
     #[test]
     fn mem_store_inserted_record_is_as_expected() {
         let (form, mut record) = get_test_form_and_record();
         let mut store = get_empty_mem_store();
-        record.id = store.serial + 1;
+        record.id = store.next_id();
         let stored_record = store.insert(form);
         assert_eq!(&record, stored_record);
     }
@@ -121,7 +116,7 @@ mod tests {
     #[test]
     fn mem_store_fetch_one_after_insert() {
         let mut store = get_populated_mem_store();
-        let expected_id = store.serial + 1;
+        let expected_id = store.next_id();
         let stored_record = insert_filled_form_to_store(&mut store);
         assert_eq!(expected_id, stored_record.id);
         let result = store.fetch_one(stored_record.id);
@@ -130,7 +125,7 @@ mod tests {
     }
 
     #[test]
-    fn form_to_record() {
+    fn test_form_to_record() {
         let (form, record) = get_test_form_and_record();
         let id = record.id;
         let generated_record = form.to_record(id);
