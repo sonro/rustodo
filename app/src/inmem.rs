@@ -51,10 +51,6 @@ where
     pub fn delete(&mut self, id: i32) -> Option<T> {
         self.storage.remove(&id)
     }
-
-    pub fn next_id(&self) -> i32 {
-        self.serial + 1
-    }
 }
 
 #[cfg(test)]
@@ -102,7 +98,7 @@ mod tests {
     fn mem_store_inserted_record_is_as_expected() {
         let (form, mut record) = get_test_form_and_record();
         let mut store = get_empty_mem_store();
-        record.id = store.next_id();
+        record.id = get_next_id(&store);
         let stored_record = store.insert(form);
         assert_eq!(record, stored_record);
     }
@@ -133,7 +129,7 @@ mod tests {
     #[test]
     fn mem_store_fetch_one_after_insert() {
         let mut store = get_populated_mem_store();
-        let expected_id = store.next_id();
+        let expected_id = get_next_id(&store);
         let stored_record = insert_filled_form_to_store(&mut store);
         assert_eq!(expected_id, stored_record.id);
         let result = store.fetch_one(stored_record.id);
@@ -145,7 +141,7 @@ mod tests {
     fn mem_store_update_one_property_exiting_record() {
         let mut store = get_populated_mem_store();
         let original_record = store
-            .fetch_one(store.next_id() - 1)
+            .fetch_one(get_list_len(&store) as i32)
             .expect("get filled record from store");
         let new_name = "Updated Name";
         let form = get_test_form_with_name(new_name);
@@ -160,7 +156,7 @@ mod tests {
     fn mem_store_delete_removes_one() {
         let mut store = get_populated_mem_store();
         let list_len = get_list_len(&store);
-        store.delete(store.next_id() - 1);
+        store.delete(list_len as i32);
         assert_eq!(list_len - 1, get_list_len(&store));
     }
 
@@ -168,9 +164,8 @@ mod tests {
     fn mem_store_delete_twice_only_removes_one() {
         let mut store = get_populated_mem_store();
         let list_len = get_list_len(&store);
-        let id = store.next_id() - 1;
-        let result1 = store.delete(id);
-        let result2 = store.delete(id);
+        let result1 = store.delete(list_len as i32);
+        let result2 = store.delete(list_len as i32);
         assert_eq!(list_len - 1, get_list_len(&store));
         assert!(result1.is_some());
         assert!(result2.is_none());

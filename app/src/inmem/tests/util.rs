@@ -38,6 +38,10 @@ pub fn insert_filled_form_to_store(store: &mut MemStore<TestRecord>) -> TestReco
     store.insert(form).clone()
 }
 
+pub fn get_next_id(store: &MemStore<TestRecord>) -> i32 {
+    get_list_len(&store) as i32 + 1
+}
+
 pub fn get_list_len(store: &MemStore<TestRecord>) -> usize {
     store.fetch_all().len()
 }
