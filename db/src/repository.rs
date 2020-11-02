@@ -22,7 +22,7 @@ impl TaskRepository for DbTaskRepository {
         model.into()
     }
 
-    fn add(&self, form: TaskForm) -> Task {
+    fn add(&mut self, form: TaskForm) -> Task {
         let form: DbTaskUpdator = form.into();
         let model: TaskModel = diesel::insert_into(tasks::table)
             .values(form)
@@ -31,13 +31,13 @@ impl TaskRepository for DbTaskRepository {
         model.into()
     }
 
-    fn remove(&self, id: i32) -> usize {
+    fn remove(&mut self, id: i32) -> usize {
         diesel::delete(tasks::table.filter(tasks::id.eq(id)))
             .execute(&get_conn())
             .expect("delete task")
     }
 
-    fn update(&self, id: i32, form: TaskForm) -> Task {
+    fn update(&mut self, id: i32, form: TaskForm) -> Task {
         let updator: DbTaskUpdator = form.into();
         let model: TaskModel = diesel::update(tasks::table)
             .filter(tasks::id.eq(id))

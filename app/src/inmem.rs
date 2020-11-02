@@ -1,49 +1,66 @@
 use std::collections::BTreeMap;
 
+pub mod repository;
+mod updator;
+
 #[derive(Debug)]
-struct MemStore<T> {
+pub struct MemStore<T> {
     storage: BTreeMap<i32, T>,
     serial: i32,
 }
 
-trait Insertable<T> {
-    fn to_record(self, id: i32) -> T;
+pub trait Insertable<T> {
+    fn to_item(self, id: i32) -> T;
+    fn update_item(self, item: &mut T);
 }
 
 impl<T> MemStore<T>
 where
     T: Clone,
 {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             storage: BTreeMap::new(),
             serial: 0,
         }
     }
 
-    fn fetch_all(&self) -> Vec<&T> {
-        self.storage.iter().map(|(_, x)| x).collect()
+    pub fn fetch_all(&self) -> Vec<T> {
+        self.storage.iter().map(|(_, x)| x.clone()).collect()
     }
 
-    fn fetch_one(&self, id: i32) -> Option<&T> {
-        self.storage.get(&id)
+    pub fn fetch_one(&self, id: i32) -> Option<T> {
+        self.storage.get(&id).map(|item| item.clone())
     }
 
-    fn insert<F: Insertable<T>>(&mut self, form: F) -> &T {
+    pub fn insert<F: Insertable<T>>(&mut self, form: F) -> T {
         self.serial += 1;
-        let item = form.to_record(self.serial);
-        self.storage.insert(self.serial, item);
-        self.fetch_one(self.serial).expect("just inserted item")
+        let item = form.to_item(self.serial);
+        if let Some(_) = self.storage.insert(self.serial, item.clone()) {
+            panic!("id should be empty at this address");
+        }
+        item
     }
 
-    fn next_id(&self) -> i32 {
+    pub fn update<F: Insertable<T>>(&mut self, id: i32, form: F) -> T {
+        let item = self.storage.get_mut(&id).expect("item in MemStore");
+        form.update_item(item);
+        item.clone()
+    }
+
+    pub fn delete(&mut self, id: i32) -> Option<T> {
+        self.storage.remove(&id)
+    }
+
+    pub fn next_id(&self) -> i32 {
         self.serial + 1
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    mod util;
+    use util::*;
 
     #[test]
     fn mem_store_fetch_empty_list() {
@@ -59,7 +76,7 @@ mod tests {
         let list = store.fetch_all();
         assert_eq!(test_records.len(), list.len());
         for (record, list) in test_records.iter().zip(list) {
-            assert_eq!(record, list);
+            assert_eq!(record, &list);
         }
     }
 
@@ -87,7 +104,7 @@ mod tests {
         let mut store = get_empty_mem_store();
         record.id = store.next_id();
         let stored_record = store.insert(form);
-        assert_eq!(&record, stored_record);
+        assert_eq!(record, stored_record);
     }
 
     #[test]
@@ -121,103 +138,50 @@ mod tests {
         assert_eq!(expected_id, stored_record.id);
         let result = store.fetch_one(stored_record.id);
         assert!(result.is_some());
-        assert_eq!(&stored_record, result.unwrap());
+        assert_eq!(stored_record, result.unwrap());
     }
 
     #[test]
-    fn test_form_to_record() {
-        let (form, record) = get_test_form_and_record();
-        let id = record.id;
-        let generated_record = form.to_record(id);
-        assert_eq!(record, generated_record);
+    fn mem_store_update_one_property_exiting_record() {
+        let mut store = get_populated_mem_store();
+        let original_record = store
+            .fetch_one(store.next_id() - 1)
+            .expect("get filled record from store");
+        let new_name = "Updated Name";
+        let form = get_test_form_with_name(new_name);
+        let updated_record = store.update(original_record.id, form);
+        assert_ne!(original_record, updated_record);
+        assert_eq!(original_record.id, updated_record.id);
+        assert_eq!(original_record.info, updated_record.info);
+        assert_eq!(new_name, updated_record.name);
     }
 
-    fn insert_filled_form_to_store(store: &mut MemStore<TestRecord>) -> TestRecord {
-        let form = get_filled_test_form();
-        // we clone here so the store can continue to be tested
-        store.insert(form).clone()
+    #[test]
+    fn mem_store_delete_removes_one() {
+        let mut store = get_populated_mem_store();
+        let list_len = get_list_len(&store);
+        store.delete(store.next_id() - 1);
+        assert_eq!(list_len - 1, get_list_len(&store));
     }
 
-    fn get_list_len(store: &MemStore<TestRecord>) -> usize {
-        store.fetch_all().len()
+    #[test]
+    fn mem_store_delete_twice_only_removes_one() {
+        let mut store = get_populated_mem_store();
+        let list_len = get_list_len(&store);
+        let id = store.next_id() - 1;
+        let result1 = store.delete(id);
+        let result2 = store.delete(id);
+        assert_eq!(list_len - 1, get_list_len(&store));
+        assert!(result1.is_some());
+        assert!(result2.is_none());
     }
 
-    fn get_populated_mem_store() -> MemStore<TestRecord> {
-        let records = get_test_records();
-        let mut storage = BTreeMap::new();
-        let serial = records.len() as i32;
-        for record in records.into_iter() {
-            storage.insert(record.id, record);
-        }
-
-        MemStore { storage, serial }
-    }
-
-    fn get_test_form_and_record() -> (TestForm, TestRecord) {
-        (
-            TestForm {
-                name: Some("Name".to_string()),
-                info: None,
-            },
-            TestRecord {
-                id: 1,
-                name: "Name".to_string(),
-                info: None,
-            },
-        )
-    }
-
-    fn get_empty_mem_store() -> MemStore<TestRecord> {
-        MemStore::new()
-    }
-
-    fn get_filled_test_form() -> TestForm {
-        TestForm {
-            name: Some("Name".to_string()),
-            info: None,
-        }
-    }
-
-    fn get_test_records() -> Vec<TestRecord> {
-        vec![
-            TestRecord {
-                id: 1,
-                name: "Test Record 1".to_string(),
-                info: None,
-            },
-            TestRecord {
-                id: 2,
-                name: "Second Test Record".to_string(),
-                info: Some("This is aka Test Record 2".to_string()),
-            },
-            TestRecord {
-                id: 3,
-                name: "More Interesting Name".to_string(),
-                info: Some("The third Test Record".to_string()),
-            },
-        ]
-    }
-
-    #[derive(Debug, Clone, PartialEq)]
-    struct TestRecord {
-        pub id: i32,
-        pub name: String,
-        pub info: Option<String>,
-    }
-
-    struct TestForm {
-        pub name: Option<String>,
-        pub info: Option<Option<String>>,
-    }
-
-    impl Insertable<TestRecord> for TestForm {
-        fn to_record(self, id: i32) -> TestRecord {
-            let name = self.name.expect("TestRecord needs a name");
-            let info = match self.info {
-                None | Some(None) => None,
-                Some(Some(s)) => Some(s),
-            };
-            TestRecord { id, name, info }
-        }
+    #[test]
+    fn mem_store_inserting_one_after_delete_has_new_id() {
+        let mut store = get_empty_mem_store();
+        let record1 = insert_filled_form_to_store(&mut store);
+        store.delete(record1.id);
+        let record2 = insert_filled_form_to_store(&mut store);
+        assert!(record1.id < record2.id);
     }
 }

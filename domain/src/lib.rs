@@ -4,9 +4,9 @@ pub mod task {
     pub trait TaskRepository {
         fn find_all(&self) -> Vec<Task>;
         fn find_one(&self, id: i32) -> Task;
-        fn add(&self, updator: TaskForm) -> Task;
-        fn remove(&self, id: i32) -> usize;
-        fn update(&self, id: i32, updator: TaskForm) -> Task;
+        fn add(&mut self, updator: TaskForm) -> Task;
+        fn remove(&mut self, id: i32) -> usize;
+        fn update(&mut self, id: i32, updator: TaskForm) -> Task;
     }
 
     #[derive(Debug, Clone)]
